@@ -80,6 +80,8 @@
         width: 14rem !important;
       }
       .noteCard .btn{width: 60% !important;font-size:13px;margin:2px}
+      /* .noteCard .UpdateErrTitle{font-size: small;} */
+      /* .noteCard .UpdateErrTxt{font-size: smaller;bottom:190px} */
     }
 
     @media only screen and (max-width:576px) and (min-width:400px) {
@@ -289,9 +291,8 @@
 
   <script>
     console.log("Welcome to notes app. This is app.js");
-    showNotes();
 
-    // Mode setting for page reloads
+  // Mode settings & required function calls for page as page reloads
     function modeconf() {
       if (localStorage.mode == undefined) { darktheme = false }
       else {
@@ -301,9 +302,10 @@
       modechange()
       prereqdel()
       noteseditable()
+      showNotes();
     }
 
-    //validate inputs
+  //validating inputs
     function onvalidate() {
       title = document.getElementById('addTitle')
       text = document.getElementById('addTxt')
@@ -314,7 +316,8 @@
       titleErr.style.display = "block"
       textErr.innerHTML = ""
       textErr.style.display = "block"
-
+      
+      // if title is empty or if it has characters but only as spaces
       if (title.value.length == 0 || !title.value.replace(/\s/g, '').length) {
         titleErr.innerHTML = "Please add a Title"
         title.style.border = "1px solid red"
@@ -335,19 +338,19 @@
     }
 
 
-    // If user adds a note, add it to the localStorage
+  // If user click on Add a note,validate & add the note to the localStorage
     let addBtn = document.getElementById("addBtn");
     addBtn.addEventListener("click", function (e) {
       onvalidate()
+
       let addTxt = document.getElementById("addTxt");
       let addTitle = document.getElementById("addTitle");
       let notes = localStorage.getItem("notes");
 
-      if (addTitle.value == "" || !addTitle.value.replace(/\s/g, '').length || text.value.length > 0 && text.value.length < 10) {
-        document.getElementsByClassName('')
-      }
-      else {
-        // Validation
+      // Checking if inputs are Valid
+      if (addTitle.value == "" || !addTitle.value.replace(/\s/g, '').length || text.value.length > 0 && text.value.length < 10){}
+      else{
+        // Sanitizing Input
         aT = addTitle.value
         addTitle.value = aT.replaceAll("<", "&lt;")
         aT = addTitle.value
@@ -363,32 +366,40 @@
           notesObj = JSON.parse(notes);
         }
 
+        //Creating a new note's entry
         let notes_merge = {
           Title: addTitle.value,
           Txt: addTxt.value
         }
 
+        //Adding the new note at the begining to localstorage's existing note's data
         notesObj.unshift(notes_merge);
         localStorage.setItem("notes", JSON.stringify(notesObj));
 
+        //After adding the note make the input fields blank
         addTxt.value = "";
         addTitle.value = "";
         showNotes();
+        
         // dismissable alert message for successful note submission
         document.getElementById("addednotes").innerHTML = `
-      <div class="alert alert-success alert-dismissible mx-auto" role="alert" style="position:fixed;z-index:1;top:24px;opacity:0.98">
-        <strong>Note Added !</strong> Your Note has been succesfully added
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-        <span aria-hidden="true">&times;</span>
-        </button>
-      </div>`
+        <div class="alert alert-success alert-dismissible mx-auto" role="alert" style="position:fixed;z-index:1;top:24px;opacity:0.98">
+          <strong>Note Added !</strong> Your Note has been succesfully added
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+          </button>
+        </div>`
+        
+        //As a new note is added ,run this functions again to add the desired features on all the notes again
         prereqdel();noteseditable();
+        
+        //If the note gets submitted then clear all errors if any error persisted
         document.getElementById('TitleErr').innerHTML = ""
         document.getElementById('TxtErr').innerHTML = ""
       }
     });
 
-    // Function to show elements from localStorage
+  // Function to show elements from localStorage
     function showNotes() {
       let notes = localStorage.getItem("notes");
       if (notes == null) {
@@ -402,14 +413,19 @@
         html += `
               <div class="noteCard my-2 mx-2 card zoom2" style="width: 18rem;">
                       <div class="card-body">
-                          <h5 class="card-title">${index + 1}.<span class="notetitle" style="padding:3px;margin-left:2px"> ${element.Title}</span></h5><hr/>
-                          <p class="card-text" style="min-height:22px;padding:3px;"> ${element.Txt}</p>
-                          <button id="Update${index}" class="btn btn-primary UpdateBtn" onclick="UpdateNote(event)">Update Note</button>
-                          <button id="${index}" class="btn btn-primary delmodcall" data-toggle="modal" data-target="#myModal3">Delete Note</button>
+                          <h5 class="card-title mb-5">${index + 1}.<span class="notetitle" style="padding:3px;margin-left:2px"> ${element.Title}</span></h5>
+                          <div class='UpdateErrTitle pt-0' style='position:absolute;font-size:13px;color:Red;font-weight:700;top:60px'></div>
+                          <hr/>
+                          <p class="card-text mb-4" style="min-height:22px;padding:3px;"> ${element.Txt}</p>
+                          <div class='UpdateErrTxt pt-0' style='position:absolute;font-size:13px;color:Red;font-weight:700;bottom:80px'></div>
+                          <button id="Update${index}" class="btn btn-primary UpdateBtn mt-5" onclick="UpdateNote(event)">Update Note</button>
+                          <button id="${index}" class="btn btn-primary delmodcall mt-5" data-toggle="modal" data-target="#myModal3">Delete Note</button>
                       </div>
                   </div>`;
       });
       let notesElm = document.getElementById("notes");
+      
+      // If there are notes data,then display all those notes.If no notes data is stored then display a message of No Notes
       if (notesObj.length != 0) {
         notesElm.innerHTML = html;
       } else {
@@ -418,14 +434,19 @@
       prereqdel();noteseditable();
     }
 
-    // Function to delete a note
-    // Passing data from click to modal
+  // Function to delete a note
+    // Depending upon which note's Delete Note is pressed, passing data to modal's onclick 
     function prereqdel() {
       delbtn = document.getElementsByClassName('delmodcall')
       arrdelbtn = Array.from(delbtn)
+      
+      // for each note's delete note button a function is set.
       arrdelbtn.forEach(function (item) {
-        item.addEventListener("click", function (e) {
+        // When anyone of note's delete note is pressed,following below function will run
+        item.addEventListener("click", function(e) {
+          // Depending upon which note's Delete Note is pressed,its id is fetched
           id = e.target.id
+          // For modal'a onclick attribute id is set as it's value
           a = document.getElementById('delnotebtn')
           a.setAttribute('onclick', `deleteNote(${id})`)
         }
@@ -433,6 +454,7 @@
       })
     }
 
+    // This fn will be called from delete modal's onclick. id of that note is passed here as parameter
     function deleteNote(index) {
       let notes = localStorage.getItem("notes");
       if (notes == null) {
@@ -442,10 +464,10 @@
       }
       notesObj.splice(index, 1);
       localStorage.setItem("notes", JSON.stringify(notesObj));
-      showNotes(); prereqdel();noteseditable();
+      showNotes();prereqdel();noteseditable();
     }
 
-    //Search Matching Notes
+  //Search Matching Notes
     let search = document.getElementById('searchTxt');
     search.addEventListener("input", function (e) {
       let inputVal = search.value.toLowerCase();
@@ -471,12 +493,12 @@
       }
     })
 
-    //To stop search from reloading ,as it refreshes page and fetched search results are disspeared
+    //To stop search from reloading ,as it refreshes page and so search result's for fetched matching note's are dissapeared
     document.getElementById('search').addEventListener("click", function (e) {
       e.preventDefault()
     })
 
-    // mode configurations
+  // mode configurations
     function modechange() {
       if (darktheme == false) {
         localStorage.setItem('mode', 'dark')
@@ -500,45 +522,65 @@
       }
     }
 
-    //Making all notes editable
+  //Making all notes editable
     function noteseditable(){
     Array.from(document.getElementsByClassName('noteCard')).forEach(function(e){
       e.getElementsByClassName('card-text')[0].contentEditable=true
       e.getElementsByClassName('notetitle')[0].contentEditable=true
-    })
-  }
+      })
+    }
     
-    //Updating Notes
+  //Updating Notes
     function UpdateNote(e){
     index=e.target.id
     index=parseInt(index.replace('Update',''))
-
-    newtitle=document.getElementsByClassName('noteCard')[index].getElementsByClassName('notetitle')[0].innerText
-    newtext=document.getElementsByClassName('noteCard')[index].getElementsByClassName('card-text')[0].innerText
     
+    // When update is pressed on a note ,fetching value of title & description of tht note at tht time.Also taking this input sanitized as well as trimmed(that's removing leading ttrailing spaces)
+    newtitle=document.getElementsByClassName('noteCard')[index].getElementsByClassName('notetitle')[0].innerText.trim().replaceAll("<", "&lt;").replaceAll(">", "&gt;")
+    newtext=document.getElementsByClassName('noteCard')[index].getElementsByClassName('card-text')[0].innerText.trim().replaceAll("<", "&lt;").replaceAll(">", "&gt;")
+    
+    //  When update is pressed on a note ,fetching value of title & description of tht note from localstorage, as how those values used to be 
     oldata=JSON.parse(localStorage.getItem("notes"));
 
-    // oldtitle=String.raw(oldtitle)
-    // if(oldata[index].Title==newtitle && oldata[index].Txt==newtext){
-    //   console.log('match')
-    // }
-    // else{console.log('nomatch')}
-
-    oldata[index]={
-      Title: newtitle,
-      Txt: newtext
-    }
-
-    localStorage.setItem("notes",JSON.stringify(oldata))    
+    oldtitle=oldata[index].Title
+    oldtext=oldata[index].Txt
     
-    document.getElementById("addednotes").innerHTML = `
-      <div class="alert alert-dark alert-dismissible mx-auto" role="alert" style="position:fixed;z-index:1;top:24px;opacity:0.98;color:black">
-        <strong>Note Updated !</strong> Your Note has been succesfully updated
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-        <span aria-hidden="true">&times;</span>
-        </button>
-      </div>`
-      showNotes();prereqdel();noteseditable();
+    // Validation
+    if(oldtitle==newtitle && oldtext==newtext){
+      Array.from(document.getElementsByClassName('UpdateErrTxt'))[index].innerText='Please edit your Note before Updating it'
+    }
+    else if(newtitle.length == 0 || !newtitle.replace(/\s/g, '').length){
+      Array.from(document.getElementsByClassName('UpdateErrTitle'))[index].innerText='Please add a Title'
+    }
+    else if(newtext.length > 0 && newtext.length < 10){
+      Array.from(document.getElementsByClassName('UpdateErrTxt'))[index].innerText='If you keep Description,add atleast 10 characters'
+    }
+    else{
+      Array.from(document.getElementsByClassName('UpdateErrTxt'))[index].innerHTML=''
+      Array.from(document.getElementsByClassName('UpdateErrTitle'))[index].innerHTML=''
+
+      // Updating data
+      oldata[index]={
+        Title: newtitle,
+        Txt: newtext
+      }
+      
+      // Storing updated data 
+      localStorage.setItem("notes",JSON.stringify(oldata))    
+      
+      // Acknowlegement
+      document.getElementById("addednotes").innerHTML =
+      `
+        <div class="alert alert-dark alert-dismissible mx-auto" role="alert" style="position:fixed;z-index:1;top:24px;opacity:0.98;color:black">
+          <strong>Note Updated !</strong> Your Note has been succesfully updated
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+      `
+      
+        showNotes();prereqdel();noteseditable();
+    }
   }
 
 // fixes done: more-precise placeholder of search, updated hr tag's color so it gets visible in both modes,fixed navbar in dark mode not being collapsable,fixed the line "No notes please add one" wasnt being visible in dark mode,save ur theme preference & serve accordingly as every time the website is loaded,deleting/adding notes alerts,search event handled,latest note displays first,input validation
