@@ -290,6 +290,38 @@
     </div>
   </div>
 
+
+<!----------- FireBase ------------->
+  <!-- The core Firebase JS SDK is always required and must be listed first -->
+  <script src="https://www.gstatic.com/firebasejs/8.4.1/firebase-app.js"></script>
+
+  <!-- TODO: Add SDKs for Firebase products that you want to use
+      https://firebase.google.com/docs/web/setup#available-libraries -->
+  <script src="https://www.gstatic.com/firebasejs/8.4.1/firebase-analytics.js"></script>
+
+  <!--Firebase Libraries-->
+  <script src="https://www.gstatic.com/firebasejs/8.4.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.4.1/firebase-database.js"></script> 
+
+  <script>
+    // Your web app's Firebase configuration
+    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+    var firebaseConfig = {
+      apiKey: "AIzaSyC7J-RW6FxPjmZ4wgpnUNInmNFYagxr1qk",
+      authDomain: "notes-app-2d17f.firebaseapp.com",
+      databaseURL: "https://notes-app-2d17f-default-rtdb.firebaseio.com",
+      projectId: "notes-app-2d17f",
+      storageBucket: "notes-app-2d17f.appspot.com",
+      messagingSenderId: "941785223323",
+      appId: "1:941785223323:web:4254bb4e5d10194c90363e",
+      measurementId: "G-7CR962DBLZ"
+    };
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    firebase.analytics();
+  </script>
+<!----------------------------->
+
   <script>
     console.log("Welcome to notes app. This is app.js");
 
@@ -377,7 +409,7 @@
         notesObj.unshift(notes_merge);
         localStorage.setItem("notes", JSON.stringify(notesObj));
 
-        //After adding the note make the input fields blank
+        // After adding the note make the input fields blank
         addTxt.value = "";
         addTitle.value = "";
         showNotes();
@@ -391,12 +423,16 @@
           </button>
         </div>`
         
-        //As a new note is added ,run this functions again to add the desired features on all the notes again
+        // As a new note is added ,run this functions again to add the desired features on all the notes again
         prereqdel();noteseditable();
         
-        //If the note gets submitted then clear all errors if any error persisted
+        // If the note gets submitted then clear all errors if any error persisted
         document.getElementById('TitleErr').innerHTML = ""
         document.getElementById('TxtErr').innerHTML = ""
+
+        // firebase
+        firebasedata=JSON.stringify(notesObj)
+        firebase.database().ref().set({Notes:firebasedata});
       }
     });
 
@@ -537,8 +573,8 @@
     index=parseInt(index.replace('Update',''))
     
     // When update is pressed on a note ,fetching value of title & description of tht note at tht time.Also taking this input sanitized as well as trimmed(that's removing leading ttrailing spaces)
-    newtitle=document.getElementsByClassName('noteCard')[index].getElementsByClassName('notetitle')[0].innerText.trim().replaceAll("<", "&lt;").replaceAll(">", "&gt;")
-    newtext=document.getElementsByClassName('noteCard')[index].getElementsByClassName('card-text')[0].innerText.trim().replaceAll("<", "&lt;").replaceAll(">", "&gt;")
+    newtitle=document.getElementsByClassName('noteCard')[index].getElementsByClassName('notetitle')[0].innerText.trimRight().replaceAll("<", "&lt;").replaceAll(">", "&gt;")
+    newtext=document.getElementsByClassName('noteCard')[index].getElementsByClassName('card-text')[0].innerText.trimRight().replaceAll("<", "&lt;").replaceAll(">", "&gt;")
     
     //  When update is pressed on a note ,fetching value of title & description of tht note from localstorage, as how those values used to be 
     oldata=JSON.parse(localStorage.getItem("notes"));
@@ -594,7 +630,6 @@
     4. Sync and host to web server
     */
   </script>
-
 </body>
 
 </html>
