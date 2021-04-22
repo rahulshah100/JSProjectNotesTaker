@@ -288,10 +288,7 @@
         </div>
       </div>
     </div>
-  </div>
-
-  <!-- for fetching firebase data -->
-  <div id="fetchfire" style="position: absolute;display: none;"></div>
+  </div>  
 
 <!----------- FireBase ------------->
   <!-- The core Firebase JS SDK is always required and must be listed first -->
@@ -440,17 +437,68 @@
 
   // Function to show elements from localStorage
     function showNotes() {
-      // let notes = localStorage.getItem("notes");
+      let notes = localStorage.getItem("notes");
 
       // Firebase      
       // let fetchedfiredata=''
       // function fetchfiredata(){
       //   firebase.database().ref().child('notes').on('value',function(snapshot){let myvar = snapshot.val().notes});
       // }
-    let notes=firebase.database().ref().child('notes').on('value',function(snapshot){
-      snapshot.val().notes
-    })
-    console.log(notes.value)
+    // let notes=firebase.database().ref().child('notes').on('value',function(snapshot){
+    //   return snapshot.val().notes
+    // })
+    // console.log(notes)
+
+    function myfunc(){
+    console.log('here-',notes)
+
+
+    if (notes == null) {
+        notesObj = [];
+      } 
+      else {
+        // notesObj = JSON.parse(notes);
+        notesObj=notes
+      }
+
+      let html = "";
+      notesObj.forEach(function (element, index) {
+        html += `
+              <div class="noteCard my-2 mx-2 card zoom2" style="width: 18rem;">
+                      <div class="card-body">
+                          <h5 class="card-title mb-5">${index + 1}.<span class="notetitle" style="padding:3px;margin-left:2px"> ${element.Title}</span></h5>
+                          <div class='UpdateErrTitle pt-0' style='position:absolute;font-size:13px;color:Red;font-weight:700;top:60px'></div>
+                          <hr/>
+                          <p class="card-text mb-4" style="min-height:22px;padding:3px;"> ${element.Txt}</p>
+                          <div class='UpdateErrTxt pt-0' style='position:absolute;font-size:13px;color:Red;font-weight:700;bottom:80px'></div>
+                          <button id="Update${index}" class="btn btn-primary UpdateBtn mt-5" onclick="UpdateNote(event)">Update Note</button>
+                          <button id="${index}" class="btn btn-primary delmodcall mt-5" data-toggle="modal" data-target="#myModal3">Delete Note</button>
+                      </div>
+                  </div>`;
+      });
+      let notesElm = document.getElementById("notes");
+      
+      // If there are notes data,then display all those notes.If no notes data is stored then display a message of No Notes
+      if (notesObj.length != 0) {
+        notesElm.innerHTML = html;
+      } else {
+        notesElm.innerHTML = `<span style="color:grey">Nothing to show! Use "Add a Note" section above to add notes.</span>`;
+      }
+
+
+  }
+
+    // var notes
+    // firebase.database().ref().on('value', function(snapshot) {
+    // console.log('snapshot-',snapshot,' ',typeof(snapshot),' ',Array.from(snapshot))
+    // snapshot.forEach(function(childSnapshot) {
+    // var childKey = childSnapshot.key;
+    // notes = childSnapshot.val();
+    // console.log('key-',childKey,'\nnotes-',notes)
+    // myfunc()
+    // });
+    // })
+    
       // fetchfiredata()
       // console.log(fetchfire.innerText)
 
