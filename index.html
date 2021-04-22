@@ -432,7 +432,7 @@
 
         // firebase
         firebasedata=JSON.stringify(notesObj)
-        firebase.database().ref().set({Notes:firebasedata});
+        firebase.database().ref().set({notes:firebasedata});
       }
     });
 
@@ -572,7 +572,7 @@
     index=e.target.id
     index=parseInt(index.replace('Update',''))
     
-    // When update is pressed on a note ,fetching value of title & description of tht note at tht time.Also taking this input sanitized as well as trimmed(that's removing leading ttrailing spaces)
+    // When update is pressed on a note ,fetching value of title & description of tht note at tht time.Also taking this input sanitized as well as trimmed(that's removed trailing spaces)
     newtitle=document.getElementsByClassName('noteCard')[index].getElementsByClassName('notetitle')[0].innerText.trimRight().replaceAll("<", "&lt;").replaceAll(">", "&gt;")
     newtext=document.getElementsByClassName('noteCard')[index].getElementsByClassName('card-text')[0].innerText.trimRight().replaceAll("<", "&lt;").replaceAll(">", "&gt;")
     

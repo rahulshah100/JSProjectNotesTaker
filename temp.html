@@ -290,6 +290,8 @@
     </div>
   </div>
 
+  <!-- for fetching firebase data -->
+  <div id="fetchfire" style="position: absolute;display: none;"></div>
 
 <!----------- FireBase ------------->
   <!-- The core Firebase JS SDK is always required and must be listed first -->
@@ -371,7 +373,7 @@
     }
 
 
-  // If user click on Add a note,validate & add the note to the localStorage
+  // If user clicks on Add a note,validate & add the note to the localStorage
     let addBtn = document.getElementById("addBtn");
     addBtn.addEventListener("click", function (e) {
       onvalidate()
@@ -432,13 +434,69 @@
 
         // firebase
         firebasedata=JSON.stringify(notesObj)
-        firebase.database().ref().set({Notes:firebasedata});
+        firebase.database().ref().child('notes').set({notes:firebasedata});
       }
     });
 
   // Function to show elements from localStorage
     function showNotes() {
-      let notes = localStorage.getItem("notes");
+      // let notes = localStorage.getItem("notes");
+
+      // Firebase      
+      // let fetchedfiredata=''
+      // function fetchfiredata(){
+      //   firebase.database().ref().child('notes').on('value',function(snapshot){let myvar = snapshot.val().notes});
+      // }
+    let notes=firebase.database().ref().child('notes').on('value',function(snapshot){
+      snapshot.val().notes
+    })
+    console.log(notes.value)
+      // fetchfiredata()
+      // console.log(fetchfire.innerText)
+
+      // firebase.database().ref().child('notes').on('value',function(snapshot){document.getElementById('fetchfire').innerText=snapshot.val().notes});
+
+      // firebase.database().ref().child('notes').on('value',function(snapshot){
+      //   let notes=snapshot.val().notes;
+      //   if (notes == null) {
+      //   notesObj = [];
+      // } else {
+      //   notesObj = JSON.parse(notes);
+      // }
+
+      // let html = "";
+      // notesObj.forEach(function (element, index) {
+      //   html += `
+      //         <div class="noteCard my-2 mx-2 card zoom2" style="width: 18rem;">
+      //                 <div class="card-body">
+      //                     <h5 class="card-title mb-5">${index + 1}.<span class="notetitle" style="padding:3px;margin-left:2px"> ${element.Title}</span></h5>
+      //                     <div class='UpdateErrTitle pt-0' style='position:absolute;font-size:13px;color:Red;font-weight:700;top:60px'></div>
+      //                     <hr/>
+      //                     <p class="card-text mb-4" style="min-height:22px;padding:3px;"> ${element.Txt}</p>
+      //                     <div class='UpdateErrTxt pt-0' style='position:absolute;font-size:13px;color:Red;font-weight:700;bottom:80px'></div>
+      //                     <button id="Update${index}" class="btn btn-primary UpdateBtn mt-5" onclick="UpdateNote(event)">Update Note</button>
+      //                     <button id="${index}" class="btn btn-primary delmodcall mt-5" data-toggle="modal" data-target="#myModal3">Delete Note</button>
+      //                 </div>
+      //             </div>`;
+      // });
+      // let notesElm = document.getElementById("notes");
+      
+      // // If there are notes data,then display all those notes.If no notes data is stored then display a message of No Notes
+      // if (notesObj.length != 0) {
+      //   notesElm.innerHTML = html;
+      // } else {
+      //   notesElm.innerHTML = `<span style="color:grey">Nothing to show! Use "Add a Note" section above to add notes.</span>`;
+      // }
+      // });
+
+      // function myFunction() {
+      //  setTimeout(function(){ firenotes=fetchfire.innerText;alert(firenotes) }, 3000);
+      // }
+
+      // myFunction()
+      // firenotes=fetchfire.innerText
+      // alert(firenotes)
+
       if (notes == null) {
         notesObj = [];
       } else {
@@ -501,6 +559,11 @@
       }
       notesObj.splice(index, 1);
       localStorage.setItem("notes", JSON.stringify(notesObj));
+
+      // firebase
+      firebasedata=JSON.stringify(notesObj)
+      firebase.database().ref().child('notes').set({notes:firebasedata});
+
       showNotes();prereqdel();noteseditable();
     }
 
@@ -539,6 +602,11 @@
     function modechange() {
       if (darktheme == false) {
         localStorage.setItem('mode', 'dark')
+        
+        // firebase
+        firebasedata='dark'
+        firebase.database().ref().child('mode').set({mode:firebasedata});
+
         document.querySelector('body').className = "darktheme"
         document.getElementById("Welcome").className = "darkcolor"
         document.getElementById("Your").className = "darkcolor"
@@ -549,6 +617,11 @@
       }
       else {
         localStorage.setItem('mode', 'bright')
+
+        // firebase
+        firebasedata='bright'
+        firebase.database().ref().child('mode').set({mode:firebasedata});
+
         document.querySelector('body').classList.remove("darktheme")
         document.getElementById("Welcome").classList.remove("darkcolor")
         document.getElementById("Your").classList.remove("darkcolor")
@@ -572,7 +645,7 @@
     index=e.target.id
     index=parseInt(index.replace('Update',''))
     
-    // When update is pressed on a note ,fetching value of title & description of tht note at tht time.Also taking this input sanitized as well as trimmed(that's removing leading ttrailing spaces)
+    // When update is pressed on a note ,fetching value of title & description of tht note at tht time.Also taking this input sanitized as well as trimmed(that's removed trailing spaces)
     newtitle=document.getElementsByClassName('noteCard')[index].getElementsByClassName('notetitle')[0].innerText.trimRight().replaceAll("<", "&lt;").replaceAll(">", "&gt;")
     newtext=document.getElementsByClassName('noteCard')[index].getElementsByClassName('card-text')[0].innerText.trimRight().replaceAll("<", "&lt;").replaceAll(">", "&gt;")
     
@@ -605,6 +678,10 @@
       // Storing updated data 
       localStorage.setItem("notes",JSON.stringify(oldata))    
       
+      // firebase
+      firebasedata=JSON.stringify(oldata)
+      firebase.database().ref().child('notes').set({notes:firebasedata});
+
       // Acknowlegement
       document.getElementById("addednotes").innerHTML =
       `
