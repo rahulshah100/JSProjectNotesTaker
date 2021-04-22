@@ -432,7 +432,7 @@
 
         // firebase
         firebasedata=JSON.stringify(notesObj)
-        firebase.database().ref().set({notes:firebasedata});
+        firebase.database().ref('notes').set({notes:firebasedata});
       }
     });
 
@@ -501,6 +501,11 @@
       }
       notesObj.splice(index, 1);
       localStorage.setItem("notes", JSON.stringify(notesObj));
+
+        // firebase
+        firebasedata=JSON.stringify(notesObj)
+        firebase.database().ref('notes').set({notes:firebasedata});
+
       showNotes();prereqdel();noteseditable();
     }
 
@@ -539,6 +544,10 @@
     function modechange() {
       if (darktheme == false) {
         localStorage.setItem('mode', 'dark')
+
+        // firebase
+        firebase.database().ref('mode').set({mode:'dark'});
+
         document.querySelector('body').className = "darktheme"
         document.getElementById("Welcome").className = "darkcolor"
         document.getElementById("Your").className = "darkcolor"
@@ -549,6 +558,10 @@
       }
       else {
         localStorage.setItem('mode', 'bright')
+
+        // firebase
+        firebase.database().ref('mode').set({mode:'bright'});
+
         document.querySelector('body').classList.remove("darktheme")
         document.getElementById("Welcome").classList.remove("darkcolor")
         document.getElementById("Your").classList.remove("darkcolor")
@@ -603,7 +616,12 @@
       }
       
       // Storing updated data 
-      localStorage.setItem("notes",JSON.stringify(oldata))    
+      localStorage.setItem("notes",JSON.stringify(oldata))
+      
+      
+        // firebase
+        firebasedata=JSON.stringify(oldata)
+        firebase.database().ref('notes').set({notes:firebasedata});      
       
       // Acknowlegement
       document.getElementById("addednotes").innerHTML =
