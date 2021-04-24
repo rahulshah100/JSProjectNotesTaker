@@ -137,10 +137,25 @@
       border-radius: .25rem;
       background-color: #ced4da;
     }
+
+    /* for higher page loading times*/
+    body {
+         -webkit-transition: background-color 0.9s;
+         transition: background-color 0.9s;
+    }
+    html, body { min-height: 100%; }
+    body.loading {
+        background: #333 url('loader.gif') no-repeat 50% 50%;
+        -webkit-transition: background-color 0;
+        transition: background-color 0;
+        opacity: 0;
+        -webkit-transition: opacity 0;
+        transition: opacity 0;
+    }
   </style>
 </head>
 
-<body onload="modeconf()">
+<body onload="modeconf()"class='loading'>
   <div class="zoom">
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
       <a class="navbar-brand" href="#">Notes Taker</a>
@@ -328,7 +343,7 @@
    console.log("Welcome to notes app. This is app.js");
 
   // Mode settings & required function calls for page as page reloads
-    //"firebase returns a promise.Promises being async in nature,we used async at this function and await in-it at firebase's fetch function...so we'll get the flow of fetching data in sync"
+    //"firebase returns a promise.Promises being async in nature they were late returning some variables which were further needed.We used async at those function and await in-them at firebase's fetch function...so this(fetching) lines will run,only after that ,further code lines will be executed
    async function modeconf() {
       //--- work on firebase storage--- 
       if(jsondata['storage'] == 'firebase'){
@@ -353,10 +368,10 @@
         else { darktheme = false }
         }
       }
-    modechange()
-    prereqdel()
-    noteseditable()
-    showNotes()    
+      modechange()
+      prereqdel()
+      noteseditable()
+      showNotes()    
    }
 
   //validating inputs
@@ -482,6 +497,7 @@
         notes = localStorage.getItem("notes");
       }
       else{
+        document.getElementById("notes").innerHTML = `<span style="color:grey">Loading ... </span>`;
         await firebase.database().ref('notes').once('value',function(snapshot){
           try{
             notes = snapshot.val().notes           
@@ -728,13 +744,23 @@
         </div>
       `
       
-        showNotes();prereqdel();noteseditable();
+      showNotes();prereqdel();noteseditable();
     }
   }
 
+
+  // For high loading times,displaying a load symbol
+    var body = document.getElementsByTagName('body')[0];
+    var removeLoading = function() {
+        setTimeout(function() {
+            body.className = body.className.replace(/loading/, '');
+        }, 1200);
+    };
+    removeLoading();
+
 // fixes done: more-precise placeholder of search, updated hr tag's color so it gets visible in both modes,fixed navbar in dark mode not being collapsable,fixed the line "No notes please add one" wasnt being visible in dark mode,save ur theme preference & serve accordingly as every time the website is loaded,deleting/adding notes alerts,search event handled,latest note displays first,input validation
 // Fixed dismissable success message making it absolute,Acknowledgement for no search results-"No search Results found",modals for delete,scrollbar toggling handled,size setting of different element,search made according to title,validations for input,responsiveness handled
-// handled input validation if only spaces/tabs are entered,removed the delete acknowlegement modal,altered size/display position of delete modal,error messages,labels & placeholder's display text changes,modals/dismissable-messages made responsive,Update Notes Functionality added,firebase integrated
+// handled input validation if only spaces/tabs are entered,removed the delete acknowlegement modal,altered size/display position of delete modal,error messages,labels & placeholder's display text changes,modals/dismissable-messages made responsive,Update Notes Functionality added,favicon added,firebase integrated,json.config added,loader and page transitions added
     /*
     Further Features:
     2. Mark a note as Important

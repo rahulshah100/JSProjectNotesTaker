@@ -1,4 +1,4 @@
 jsondata = {
-    "storage":"localStorage"
+    "storage":"firebase"
 }
 // storage could be firebase/localStorage
