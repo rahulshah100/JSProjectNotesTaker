@@ -5,15 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Forroughwork</title>
 </head>
-<body>
+<body onload="mj()">
+    <button onclick="nonmj()">1</button>
+    <button onclick="mj2()">wokay</button>
+    <button onclick="nonmj2()">2</button>
     Forroughwork
     <script>
-        console.log('forroughwork')
-        let a=1
-        console.log(a)
-        function aa(){a=12}
-        aa()
-        console.log(a)
+        
+        function mj(){
+            dt='tr'
+            alert(dt)
+        }
+        
+        console.log('ahia',dt)
+        
+       function mj2(){
+           dt0='tr0'
+           alert(dt0)
+       }
+
+       function nonmj(){
+           if(dt=='tr'){console.log('ok');}
+           else{console.log('nok')}
+       }       
+
+       function nonmj2(){
+           if(dt0=='tr0'){console.log('ok');}
+           else{console.log('nok')}
+       }       
     </script>
 </body>
 </html>

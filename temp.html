@@ -288,9 +288,12 @@
         </div>
       </div>
     </div>
-  </div>  
+  </div>
 
-<!----------- FireBase ------------->
+  <!-- importing my config.json file -->
+  <script src="config.json"></script>
+
+  <!----------- FireBase ------------->
   <!-- The core Firebase JS SDK is always required and must be listed first -->
   <script src="https://www.gstatic.com/firebasejs/8.4.1/firebase-app.js"></script>
 
@@ -322,20 +325,39 @@
 <!----------------------------->
 
   <script>
-    console.log("Welcome to notes app. This is app.js");
+   console.log("Welcome to notes app. This is app.js");
 
   // Mode settings & required function calls for page as page reloads
-    function modeconf() {
+    //"firebase returns a promise.Promises being async in nature,we used async at this function and await in-it at firebase's fetch function...so we'll get the flow of fetching data in sync"
+   async function modeconf() {
+      //--- work on firebase storage--- 
+      if(jsondata['storage'] == 'firebase'){
+        await firebase.database().ref('mode').once('value',function(snapshot){
+          try{
+            firebasedata = snapshot.val().mode
+            if (firebasedata == 'bright') { darktheme = true }
+            else { darktheme = false }
+          }
+          //if site's first time loaded and we dont have any mode endpoint made we'll catch it here
+          catch(err){
+            // console.log(err)
+            darktheme = false
+          }
+        })
+      } 
+    //--- work on localStorage system ---    
+    else{      
       if (localStorage.mode == undefined) { darktheme = false }
       else {
         if (localStorage.mode == 'bright') { darktheme = true }
         else { darktheme = false }
+        }
       }
-      modechange()
-      prereqdel()
-      noteseditable()
-      showNotes();
-    }
+    modechange()
+    prereqdel()
+    noteseditable()
+    showNotes()    
+   }
 
   //validating inputs
     function onvalidate() {
@@ -370,14 +392,28 @@
     }
 
 
-  // If user clicks on Add a note,validate & add the note to the localStorage
+  // If user click on Add a note,validate & add the note to the localStorage
     let addBtn = document.getElementById("addBtn");
-    addBtn.addEventListener("click", function (e) {
+    addBtn.addEventListener("click",async function (e) {
       onvalidate()
 
       let addTxt = document.getElementById("addTxt");
       let addTitle = document.getElementById("addTitle");
-      let notes = localStorage.getItem("notes");
+      let notes 
+      if(jsondata['storage']=='localStorage'){
+        notes = localStorage.getItem("notes");
+      }
+      else{
+        await firebase.database().ref('notes').once('value',function(snapshot){
+          try{
+            notes = snapshot.val().notes            
+          }          
+          catch(err){
+            console.log(err)
+          }
+        }) 
+      }
+
 
       // Checking if inputs are Valid
       if (addTitle.value == "" || !addTitle.value.replace(/\s/g, '').length || text.value.length > 0 && text.value.length < 10){}
@@ -404,9 +440,16 @@
           Txt: addTxt.value
         }
 
-        //Adding the new note at the begining to localstorage's existing note's data
         notesObj.unshift(notes_merge);
-        localStorage.setItem("notes", JSON.stringify(notesObj));
+
+        if(jsondata['storage']=='localStorage'){
+          //Adding the new note at the begining to localstorage's existing note's data
+          localStorage.setItem("notes", JSON.stringify(notesObj));
+        }
+        else{
+          // firebase
+          firebase.database().ref('notes').set({notes:JSON.stringify(notesObj)});
+        }
 
         // After adding the note make the input fields blank
         addTxt.value = "";
@@ -429,121 +472,25 @@
         document.getElementById('TitleErr').innerHTML = ""
         document.getElementById('TxtErr').innerHTML = ""
 
-        // firebase
-        firebasedata=JSON.stringify(notesObj)
-        firebase.database().ref().child('notes').set({notes:firebasedata});
       }
     });
 
-  // Function to show elements from localStorage
-    function showNotes() {
-      let notes = localStorage.getItem("notes");
-
-      // Firebase      
-      // let fetchedfiredata=''
-      // function fetchfiredata(){
-      //   firebase.database().ref().child('notes').on('value',function(snapshot){let myvar = snapshot.val().notes});
-      // }
-    // let notes=firebase.database().ref().child('notes').on('value',function(snapshot){
-    //   return snapshot.val().notes
-    // })
-    // console.log(notes)
-
-    function myfunc(){
-    console.log('here-',notes)
-
-
-    if (notes == null) {
-        notesObj = [];
-      } 
-      else {
-        // notesObj = JSON.parse(notes);
-        notesObj=notes
+  // Function to show elements from localStorage/firebase
+    async function showNotes() {
+      let notes 
+      if(jsondata['storage']=='localStorage'){
+        notes = localStorage.getItem("notes");
       }
-
-      let html = "";
-      notesObj.forEach(function (element, index) {
-        html += `
-              <div class="noteCard my-2 mx-2 card zoom2" style="width: 18rem;">
-                      <div class="card-body">
-                          <h5 class="card-title mb-5">${index + 1}.<span class="notetitle" style="padding:3px;margin-left:2px"> ${element.Title}</span></h5>
-                          <div class='UpdateErrTitle pt-0' style='position:absolute;font-size:13px;color:Red;font-weight:700;top:60px'></div>
-                          <hr/>
-                          <p class="card-text mb-4" style="min-height:22px;padding:3px;"> ${element.Txt}</p>
-                          <div class='UpdateErrTxt pt-0' style='position:absolute;font-size:13px;color:Red;font-weight:700;bottom:80px'></div>
-                          <button id="Update${index}" class="btn btn-primary UpdateBtn mt-5" onclick="UpdateNote(event)">Update Note</button>
-                          <button id="${index}" class="btn btn-primary delmodcall mt-5" data-toggle="modal" data-target="#myModal3">Delete Note</button>
-                      </div>
-                  </div>`;
-      });
-      let notesElm = document.getElementById("notes");
-      
-      // If there are notes data,then display all those notes.If no notes data is stored then display a message of No Notes
-      if (notesObj.length != 0) {
-        notesElm.innerHTML = html;
-      } else {
-        notesElm.innerHTML = `<span style="color:grey">Nothing to show! Use "Add a Note" section above to add notes.</span>`;
+      else{
+        await firebase.database().ref('notes').once('value',function(snapshot){
+          try{
+            notes = snapshot.val().notes           
+          }
+          catch(err){
+            console.log(err)
+          }
+        })
       }
-
-
-  }
-
-    // var notes
-    // firebase.database().ref().on('value', function(snapshot) {
-    // console.log('snapshot-',snapshot,' ',typeof(snapshot),' ',Array.from(snapshot))
-    // snapshot.forEach(function(childSnapshot) {
-    // var childKey = childSnapshot.key;
-    // notes = childSnapshot.val();
-    // console.log('key-',childKey,'\nnotes-',notes)
-    // myfunc()
-    // });
-    // })
-    
-      // fetchfiredata()
-      // console.log(fetchfire.innerText)
-
-      // firebase.database().ref().child('notes').on('value',function(snapshot){document.getElementById('fetchfire').innerText=snapshot.val().notes});
-
-      // firebase.database().ref().child('notes').on('value',function(snapshot){
-      //   let notes=snapshot.val().notes;
-      //   if (notes == null) {
-      //   notesObj = [];
-      // } else {
-      //   notesObj = JSON.parse(notes);
-      // }
-
-      // let html = "";
-      // notesObj.forEach(function (element, index) {
-      //   html += `
-      //         <div class="noteCard my-2 mx-2 card zoom2" style="width: 18rem;">
-      //                 <div class="card-body">
-      //                     <h5 class="card-title mb-5">${index + 1}.<span class="notetitle" style="padding:3px;margin-left:2px"> ${element.Title}</span></h5>
-      //                     <div class='UpdateErrTitle pt-0' style='position:absolute;font-size:13px;color:Red;font-weight:700;top:60px'></div>
-      //                     <hr/>
-      //                     <p class="card-text mb-4" style="min-height:22px;padding:3px;"> ${element.Txt}</p>
-      //                     <div class='UpdateErrTxt pt-0' style='position:absolute;font-size:13px;color:Red;font-weight:700;bottom:80px'></div>
-      //                     <button id="Update${index}" class="btn btn-primary UpdateBtn mt-5" onclick="UpdateNote(event)">Update Note</button>
-      //                     <button id="${index}" class="btn btn-primary delmodcall mt-5" data-toggle="modal" data-target="#myModal3">Delete Note</button>
-      //                 </div>
-      //             </div>`;
-      // });
-      // let notesElm = document.getElementById("notes");
-      
-      // // If there are notes data,then display all those notes.If no notes data is stored then display a message of No Notes
-      // if (notesObj.length != 0) {
-      //   notesElm.innerHTML = html;
-      // } else {
-      //   notesElm.innerHTML = `<span style="color:grey">Nothing to show! Use "Add a Note" section above to add notes.</span>`;
-      // }
-      // });
-
-      // function myFunction() {
-      //  setTimeout(function(){ firenotes=fetchfire.innerText;alert(firenotes) }, 3000);
-      // }
-
-      // myFunction()
-      // firenotes=fetchfire.innerText
-      // alert(firenotes)
 
       if (notes == null) {
         notesObj = [];
@@ -598,19 +545,38 @@
     }
 
     // This fn will be called from delete modal's onclick. id of that note is passed here as parameter
-    function deleteNote(index) {
-      let notes = localStorage.getItem("notes");
+    async function deleteNote(index) {
+      let notes 
+      if(jsondata['storage']=='localStorage'){
+        notes = localStorage.getItem("notes");
+      }
+      else{
+        await firebase.database().ref('notes').once('value',function(snapshot){
+          try{
+            notes = snapshot.val().notes
+          }
+          catch(err){
+            console.log(err)
+          }
+        })
+      }  
+
       if (notes == null) {
         notesObj = [];
       } else {
         notesObj = JSON.parse(notes);
       }
       notesObj.splice(index, 1);
-      localStorage.setItem("notes", JSON.stringify(notesObj));
-
-      // firebase
-      firebasedata=JSON.stringify(notesObj)
-      firebase.database().ref().child('notes').set({notes:firebasedata});
+      
+      if(jsondata['storage']=='localStorage')
+      { 
+        localStorage.setItem("notes", JSON.stringify(notesObj));
+      }
+      else{
+        // firebase
+        firebasedata=JSON.stringify(notesObj)
+        firebase.database().ref('notes').set({notes:firebasedata});
+      }
 
       showNotes();prereqdel();noteseditable();
     }
@@ -649,11 +615,14 @@
   // mode configurations
     function modechange() {
       if (darktheme == false) {
-        localStorage.setItem('mode', 'dark')
         
-        // firebase
-        firebasedata='dark'
-        firebase.database().ref().child('mode').set({mode:firebasedata});
+        if(jsondata['storage']=='localStorage'){
+          localStorage.setItem('mode', 'dark')
+        }
+        else{
+          // firebase
+          firebase.database().ref('mode').set({mode:'dark'});
+        }
 
         document.querySelector('body').className = "darktheme"
         document.getElementById("Welcome").className = "darkcolor"
@@ -664,11 +633,14 @@
         darktheme = true
       }
       else {
-        localStorage.setItem('mode', 'bright')
 
-        // firebase
-        firebasedata='bright'
-        firebase.database().ref().child('mode').set({mode:firebasedata});
+        if(jsondata['storage']=='localStorage'){
+          localStorage.setItem('mode', 'bright')
+        }
+        else{
+          // firebase
+          firebase.database().ref('mode').set({mode:'bright'});
+        }
 
         document.querySelector('body').classList.remove("darktheme")
         document.getElementById("Welcome").classList.remove("darkcolor")
@@ -689,7 +661,7 @@
     }
     
   //Updating Notes
-    function UpdateNote(e){
+    async function UpdateNote(e){
     index=e.target.id
     index=parseInt(index.replace('Update',''))
     
@@ -698,7 +670,19 @@
     newtext=document.getElementsByClassName('noteCard')[index].getElementsByClassName('card-text')[0].innerText.trimRight().replaceAll("<", "&lt;").replaceAll(">", "&gt;")
     
     //  When update is pressed on a note ,fetching value of title & description of tht note from localstorage, as how those values used to be 
-    oldata=JSON.parse(localStorage.getItem("notes"));
+    if(jsondata['storage']=='localStorage'){
+      oldata=JSON.parse(localStorage.getItem("notes"));
+    }
+    else{
+      await firebase.database().ref('notes').once('value',function(snapshot){
+          try{
+            oldata = JSON.parse(snapshot.val().notes)
+          }
+          catch(err){
+            console.log(err)
+          }
+        }) 
+    }
 
     oldtitle=oldata[index].Title
     oldtext=oldata[index].Txt
@@ -724,12 +708,15 @@
       }
       
       // Storing updated data 
-      localStorage.setItem("notes",JSON.stringify(oldata))    
+      if(jsondata['storage']=='localStorage'){
+        localStorage.setItem("notes",JSON.stringify(oldata))
+      }
+      else{
+        // firebase
+        firebasedata=JSON.stringify(oldata)
+        firebase.database().ref('notes').set({notes:firebasedata});      
+      }            
       
-      // firebase
-      firebasedata=JSON.stringify(oldata)
-      firebase.database().ref().child('notes').set({notes:firebasedata});
-
       // Acknowlegement
       document.getElementById("addednotes").innerHTML =
       `
@@ -747,7 +734,7 @@
 
 // fixes done: more-precise placeholder of search, updated hr tag's color so it gets visible in both modes,fixed navbar in dark mode not being collapsable,fixed the line "No notes please add one" wasnt being visible in dark mode,save ur theme preference & serve accordingly as every time the website is loaded,deleting/adding notes alerts,search event handled,latest note displays first,input validation
 // Fixed dismissable success message making it absolute,Acknowledgement for no search results-"No search Results found",modals for delete,scrollbar toggling handled,size setting of different element,search made according to title,validations for input,responsiveness handled
-// handled input validation if only spaces/tabs are entered,removed the delete acknowlegement modal,altered size/display position of delete modal,error messages,labels & placeholder's display text changes,modals/dismissable-messages made responsive,Update Notes Functionality added
+// handled input validation if only spaces/tabs are entered,removed the delete acknowlegement modal,altered size/display position of delete modal,error messages,labels & placeholder's display text changes,modals/dismissable-messages made responsive,Update Notes Functionality added,firebase integrated
     /*
     Further Features:
     2. Mark a note as Important
