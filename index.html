@@ -13,9 +13,12 @@
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
 
   <style>
-    #aboutus {
+    .nav-link {
       cursor: pointer;
     }
+
+    #signina:hover{color: white;box-shadow:1px 1px 3px #000000 inset}
+    #signouta:hover{color: white;box-shadow:1px 1px 3px #000000 inset}
 
     #modebtn:hover {
       border-radius: 10px 10px;
@@ -155,7 +158,7 @@
   </style>
 </head>
 
-<body onload="modeconf()"class='loading'>
+<body onload="signin()"class='loading'>
   <div class="zoom">
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
       <a class="navbar-brand" href="#">Notes Taker</a>
@@ -170,11 +173,19 @@
             <a class="nav-link" id="aboutus" data-toggle="modal" data-target="#myModal"> About Us </a>
           </li>
           <li class="nav-item active">
-            <a class="nav-link" id="aboutus" data-toggle="modal" data-target="#myModal2"> Contact Us </a>
+            <a class="nav-link" id="contactus" data-toggle="modal" data-target="#myModal2"> Contact Us </a>
+          </li>
+
+          <li class="nav-item active" style="position:absolute;right:335px">
+            <a class='nav-link' id='signina' onclick='signin()'>Sign in</a>
+          </li>
+          <li class="nav-item active" style="position:absolute;right:335px">
+            <a class='nav-link' id='signouta' onclick='signout()'>Sign out</a>
           </li>
         </ul>
+
         <form class="form-inline my-2 my-lg-0">
-          <input class="form-control mr-sm-2" id="searchTxt" type="search" placeholder="Your Note's Title"
+          <input class="form-control mr-sm-2 ml-2" id="searchTxt" type="search" placeholder="Your Note's Title"
             aria-label="Search">
           <button class="btn btn-outline-success my-2 my-sm-0" type="submit" id="search">Search</button>
         </form>
@@ -305,6 +316,7 @@
     </div>
   </div>
 
+
   <!-- importing my config.json file -->
   <script src="config.json"></script>
 
@@ -339,6 +351,78 @@
   </script>
 <!----------------------------->
 
+<!--Sign in/Sign out user using google authentication-->
+  <script>    
+   async function signin(){
+     // if firebase is used for storage
+     if(jsondata['storage']=='firebase'){
+       await firebase.auth().onAuthStateChanged(function(user){
+        // if user is already logged in
+        if(user){
+          //Declaring a variable like below makes it a global variable and hence we can further use it in any function or anywhere without passing it 
+          
+          // shows signout button
+          signouta.style.display='block'
+          signina.style.display='none'                
+          // user_id is used to identify one account 
+          user_id=user.uid
+          console.log('user was logged in',user_id)
+          modeconf()
+        }
+        // if user isnt logged in
+        else{
+          // shows signin button
+          signouta.style.display='none'
+          signina.style.display='block'
+
+          // show user isnt signed in
+          document.getElementsByTagName('body')[0].innerHTML = `<div id='Sigin'style="color:grey;margin:25px"><h2>Sign-In To Continue<h2></div>`;
+          console.log('logging in')
+
+          // give google auth prompt for signing in
+          var provider = new firebase.auth.GoogleAuthProvider();
+          firebase.auth().signInWithPopup(provider).then((result) => {
+            var credential = result.credential;
+            // This gives you a Google Access Token. You can use it to access Google API.
+            var token = credential.accessToken;
+            // The signed-in user info.
+            user = result.user
+            user_id = user.uid
+            console.log('User Logged In Successfully', credential, token, 'userid-',user_id,' user-',user)
+            
+            // if user has got signed-in then serve the logged in page
+            location.reload()
+          }).catch((error) => {
+            // If any signin error occurs,handle Errors here 
+            var errorCode = error.code;
+            var errorMessage = error.message;
+            var email = error.email;
+            var credential = error.credential;
+            console.log('Error signing in',credential)
+          });
+        }
+      })
+      }
+    // if localhost is used for storage dont show sign - in/out options
+    else{
+        signouta.style.display='none'
+        signina.style.display='none'
+        modeconf()
+      }
+    }
+    
+    async function signout(){
+      if(jsondata['storage']=='firebase'){
+      await firebase.auth().signOut().then(() => {
+            console.log('Sign-out successful.')
+          }).catch((error) => {
+            console.log('During Sign-out ,an error happened.')
+          });
+      }
+      else{}	
+	  }	  
+  </script>
+
   <script>
    console.log("Welcome to notes app. This is app.js");
 
@@ -347,7 +431,7 @@
    async function modeconf() {
       //--- work on firebase storage--- 
       if(jsondata['storage'] == 'firebase'){
-        await firebase.database().ref('mode').once('value',function(snapshot){
+		await firebase.database().ref(user_id+'/mode').once('value',function(snapshot){
           try{
             firebasedata = snapshot.val().mode
             if (firebasedata == 'bright') { darktheme = true }
@@ -358,7 +442,7 @@
             // console.log(err)
             darktheme = false
           }
-        })
+        })       
       } 
     //--- work on localStorage system ---    
     else{      
@@ -368,10 +452,10 @@
         else { darktheme = false }
         }
       }
-      modechange()
-      prereqdel()
-      noteseditable()
       showNotes()    
+	    modechange()
+      prereqdel()
+      noteseditable()      
    }
 
   //validating inputs
@@ -419,7 +503,7 @@
         notes = localStorage.getItem("notes");
       }
       else{
-        await firebase.database().ref('notes').once('value',function(snapshot){
+        await firebase.database().ref(user_id+'/notes').once('value',function(snapshot){
           try{
             notes = snapshot.val().notes            
           }          
@@ -462,8 +546,9 @@
           localStorage.setItem("notes", JSON.stringify(notesObj));
         }
         else{
-          // firebase
-          firebase.database().ref('notes').set({notes:JSON.stringify(notesObj)});
+          // firebase		
+		  console.log(user_id)
+          firebase.database().ref(user_id+'/notes').set({notes:JSON.stringify(notesObj)});
         }
 
         // After adding the note make the input fields blank
@@ -498,7 +583,7 @@
       }
       else{
         document.getElementById("notes").innerHTML = `<span style="color:grey">Loading ... </span>`;
-        await firebase.database().ref('notes').once('value',function(snapshot){
+        await firebase.database().ref(user_id+'/notes').once('value',function(snapshot){
           try{
             notes = snapshot.val().notes           
           }
@@ -520,10 +605,10 @@
               <div class="noteCard my-2 mx-2 card zoom2" style="width: 18rem;">
                       <div class="card-body">
                           <h5 class="card-title mb-5">${index + 1}.<span class="notetitle" style="padding:3px;margin-left:2px"> ${element.Title}</span></h5>
-                          <div class='UpdateErrTitle pt-0' style='position:absolute;font-size:13px;color:Red;font-weight:700;top:60px'></div>
+                          <div class='UpdateErrTitle pt-0' style='font-size:13px;color:Red;font-weight:700;top:60px'></div>
                           <hr/>
                           <p class="card-text mb-4" style="min-height:22px;padding:3px;"> ${element.Txt}</p>
-                          <div class='UpdateErrTxt pt-0' style='position:absolute;font-size:13px;color:Red;font-weight:700;bottom:80px'></div>
+                          <div class='UpdateErrTxt pt-0' style='font-size:13px;color:Red;font-weight:700;bottom:80px'></div>
                           <button id="Update${index}" class="btn btn-primary UpdateBtn mt-5" onclick="UpdateNote(event)">Update Note</button>
                           <button id="${index}" class="btn btn-primary delmodcall mt-5" data-toggle="modal" data-target="#myModal3">Delete Note</button>
                       </div>
@@ -567,7 +652,7 @@
         notes = localStorage.getItem("notes");
       }
       else{
-        await firebase.database().ref('notes').once('value',function(snapshot){
+        await firebase.database().ref(user_id+'/notes').once('value',function(snapshot){
           try{
             notes = snapshot.val().notes
           }
@@ -591,7 +676,7 @@
       else{
         // firebase
         firebasedata=JSON.stringify(notesObj)
-        firebase.database().ref('notes').set({notes:firebasedata});
+        firebase.database().ref(user_id+'/notes').set({notes:firebasedata});
       }
 
       showNotes();prereqdel();noteseditable();
@@ -637,7 +722,7 @@
         }
         else{
           // firebase
-          firebase.database().ref('mode').set({mode:'dark'});
+          firebase.database().ref(user_id+'/mode').set({mode:'dark'});
         }
 
         document.querySelector('body').className = "darktheme"
@@ -655,7 +740,7 @@
         }
         else{
           // firebase
-          firebase.database().ref('mode').set({mode:'bright'});
+          firebase.database().ref(user_id+'/mode').set({mode:'bright'});
         }
 
         document.querySelector('body').classList.remove("darktheme")
@@ -663,7 +748,7 @@
         document.getElementById("Your").classList.remove("darkcolor")
         document.querySelector('nav').setAttribute('class', "navbar navbar-expand-lg navbar-dark bg-dark")
         document.getElementById("search").setAttribute('class', "btn btn-outline-success my-2 my-sm-0")
-        document.getElementById("modebtn").src = "dark.png"
+        document.getElementById("modebtn").src = "dark.png"        
         darktheme = false
       }
     }
@@ -690,7 +775,7 @@
       oldata=JSON.parse(localStorage.getItem("notes"));
     }
     else{
-      await firebase.database().ref('notes').once('value',function(snapshot){
+      await firebase.database().ref(user_id+'/notes').once('value',function(snapshot){
           try{
             oldata = JSON.parse(snapshot.val().notes)
           }
@@ -730,7 +815,7 @@
       else{
         // firebase
         firebasedata=JSON.stringify(oldata)
-        firebase.database().ref('notes').set({notes:firebasedata});      
+        firebase.database().ref(user_id+'/notes').set({notes:firebasedata});      
       }            
       
       // Acknowlegement
@@ -754,7 +839,7 @@
     var removeLoading = function() {
         setTimeout(function() {
             body.className = body.className.replace(/loading/, '');
-        }, 1200);
+        }, 1400);
     };
     removeLoading();
 
