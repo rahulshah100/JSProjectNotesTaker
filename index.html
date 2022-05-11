@@ -1,3 +1,5 @@
+<!-- site published at: https://rahulshah100.github.io/JSProjectNotesTaker/ -->
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -414,8 +416,9 @@
     
     async function signout(){
       if(jsondata['storage']=='firebase'){
-      await firebase.auth().signOut().then(() => {
+      await firebase.auth().signOut().then((e) => {
             console.log('Sign-out successful.')
+            e.preventDefault()
           }).catch((error) => {
             console.log('During Sign-out ,an error happened.')
           });
