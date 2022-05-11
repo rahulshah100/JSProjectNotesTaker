@@ -382,6 +382,7 @@
           // give google auth prompt for signing in
           var provider = new firebase.auth.GoogleAuthProvider();
           firebase.auth().signInWithPopup(provider).then((result) => {
+            console.log('1')
             var credential = result.credential;
             // This gives you a Google Access Token. You can use it to access Google API.
             var token = credential.accessToken;
@@ -398,7 +399,7 @@
             var errorMessage = error.message;
             var email = error.email;
             var credential = error.credential;
-            console.log('Error signing in',credential)
+            console.log('Error signing in', errorCode, errorMessage, email,credential)
           });
         }
       })
@@ -833,8 +834,6 @@
     }
   }
 
-
-  // For high loading times,displaying a load symbol
     var body = document.getElementsByTagName('body')[0];
     var removeLoading = function() {
         setTimeout(function() {
@@ -842,16 +841,6 @@
         }, 1400);
     };
     removeLoading();
-
-// fixes done: more-precise placeholder of search, updated hr tag's color so it gets visible in both modes,fixed navbar in dark mode not being collapsable,fixed the line "No notes please add one" wasnt being visible in dark mode,save ur theme preference & serve accordingly as every time the website is loaded,deleting/adding notes alerts,search event handled,latest note displays first,input validation
-// Fixed dismissable success message making it absolute,Acknowledgement for no search results-"No search Results found",modals for delete,scrollbar toggling handled,size setting of different element,search made according to title,validations for input,responsiveness handled
-// handled input validation if only spaces/tabs are entered,removed the delete acknowlegement modal,altered size/display position of delete modal,error messages,labels & placeholder's display text changes,modals/dismissable-messages made responsive,Update Notes Functionality added,favicon added,firebase integrated,json.config added,loader and page transitions added
-    /*
-    Further Features:
-    2. Mark a note as Important
-    3. Separate notes by user
-    4. Sync and host to web server
-    */
   </script>
 </body>
 
